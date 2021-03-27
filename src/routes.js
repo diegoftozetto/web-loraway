@@ -3,7 +3,7 @@ import DeviceList from './components/DeviceList'
 
 export const routes = [
   {
-    path: '/',
+    path: '/home',
     component: DeviceList
   },
   {
@@ -12,6 +12,6 @@ export const routes = [
   },
   {
     path: '',
-    redirect: '/'
+    redirect: '/home'
   }
 ];
