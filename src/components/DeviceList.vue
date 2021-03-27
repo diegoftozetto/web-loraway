@@ -44,7 +44,7 @@ export default {
 
   methods: {
     async request() {
-      const response = await fetch("http://api-loraway.herokuapp.com/devices");
+      const response = await fetch("https://api-loraway.herokuapp.com/devices");
       const data = await response.json();
       this.deviceIds = data.deviceIds;
       //console.log(this.deviceIds);

@@ -69,7 +69,7 @@ export default {
       if (this.$route.params.id === undefined) clearInterval(this.interval);
       else {
         const response = await fetch(
-          "http://api-loraway.herokuapp.com/readings/" + this.$route.params.id
+          "https://api-loraway.herokuapp.com/readings/" + this.$route.params.id
         );
         const data = await response.json();
         this.readings = data;
