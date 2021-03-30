@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mt-4">
     <div v-if="!deviceIds">
       <p class="display-1 mt-6" align="center">Carregando...</p>
     </div>
