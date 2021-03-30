@@ -13,8 +13,8 @@
           <v-btn
             text
             color="teal accent-4"
-            @click="reveal = true; clearInterval(this.interval)"
-            :to="test(item)"
+            @click="reveal = true;"
+            :to="`/device/${item}/readings`"
           >Visualizar Leituras</v-btn>
         </v-card-actions>
       </v-card>
@@ -22,6 +22,8 @@
   </div>
 </template>
 <script>
+import axios from "axios";
+
 export default {
   name: "DeviceList",
 
@@ -30,11 +32,6 @@ export default {
   },
 
   mounted() {
-    console.log("HTML à disposição");
-    var self = this;
-    this.interval = setInterval(function () {
-      self.request();
-    }, 20000);
   },
 
   data: () => ({
@@ -44,15 +41,16 @@ export default {
 
   methods: {
     async request() {
-      const response = await fetch("https://api-loraway.herokuapp.com/devices");
-      const data = await response.json();
-      this.deviceIds = data.deviceIds;
-      //console.log(this.deviceIds);
-    },
-    test(item) {
-      clearInterval(this.interval);
-      return `/device/${item}/readings`;
-    },
+      axios
+      .get("https://api-loraway.herokuapp.com/devices")
+      .then((response) => {
+        this.deviceIds = response.data.deviceIds;
+        //console.log(this.deviceIds)
+      })
+      .catch(() => {
+        //console.log(e);
+      });
+    }
   },
 };
 </script>

@@ -27,7 +27,7 @@
       </v-btn>
     </v-app-bar>
 
-    <v-main class="mt-4">
+    <v-main>
       <router-view/>
     </v-main>
   </v-app>

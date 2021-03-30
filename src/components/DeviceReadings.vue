@@ -4,9 +4,25 @@
       <p class="display-1 mt-6" align="center">Carregando...</p>
     </div>
     <div v-else>
-      <p align="center" class="mt-2 mb-4">
-        <b>Identificador do Dispositivo: {{$route.params.id}}</b>
-      </p>
+      <v-alert
+        color="primary"
+        dark
+      >
+        Identificador do Dispositivo: {{$route.params.id}}
+        <v-btn
+          class="mx-2"
+          fab
+          dark
+          small
+          color="secondary"
+          @click="request"
+          id="btn-update"
+        >
+          <v-icon dark>
+            mdi-update
+          </v-icon>
+        </v-btn>
+      </v-alert>
       <v-card v-for="reading in readings" :key="reading._id" class="mx-auto mb-4 ml-4 mr-4">
         <v-list-item two-line>
           <v-list-item-content>
@@ -37,14 +53,39 @@
         <v-divider></v-divider>
 
         <v-card-actions>
-          <v-btn text>{{new Date(reading.timestamp * 1000).toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"})}}</v-btn>
+          <v-btn
+            text
+          >{{new Date(reading.timestamp * 1000).toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"})}}</v-btn>
         </v-card-actions>
       </v-card>
+      <v-pagination
+        v-model="page"
+        :length="pageCount"
+        class="mb-2"
+        @input="handlePageChange"
+      ></v-pagination>
+      <v-snackbar
+        v-model="snackbar"
+      >
+        {{text}}
+        <template v-slot:action="{ attrs }">
+          <v-btn
+            color="pink"
+            text
+            v-bind="attrs"
+            @click="snackbar = false"
+          >
+            Fechar
+          </v-btn>
+        </template>
+      </v-snackbar>
     </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "DeviceReadings",
 
@@ -53,35 +94,54 @@ export default {
   },
 
   mounted() {
-    var self = this;
-    this.interval = setInterval(function () {
-      self.request();
-    }, 3000);
   },
 
   data: () => ({
     readings: undefined,
-    interval: undefined,
+    snackbar: false,
+    text: undefined,
+    pageCount: 1,
+    page: 1,
   }),
 
   methods: {
-    async request() {
-      if (this.$route.params.id === undefined) clearInterval(this.interval);
-      else {
-        const response = await fetch(
-          "https://api-loraway.herokuapp.com/readings/" + this.$route.params.id
-        );
-        const data = await response.json();
-        this.readings = data;
-        //console.log(this.readings);
-      }
+    async request(isUpdate) {
+
+      axios
+        .get("https://api-loraway.herokuapp.com/readings/" + this.$route.params.id + "?page=" + this.page)
+        .then((response) => {
+          this.readings = response.data.readings;
+          this.pageCount = response.data.paginator.pageCount;
+
+          if(isUpdate) {
+            this.text = "Dados atualizados com sucesso! :)"
+            this.snackbar = true;
+          }
+        })
+        .catch(() => {
+          this.text = "Erro ao carregar dados :("
+          this.snackbar = true;
+          //console.log(e);
+        });
     },
-  }
+    handlePageChange(value) {
+      this.page = value;
+      this.request(true);
+    }
+  },
 };
 </script>
 
 <style scoped>
 .uppercase {
   text-transform: uppercase;
+}
+
+#btn-update {
+  float: right;
+}
+
+.v-alert {
+  border-radius: 0 !important;
 }
 </style>
