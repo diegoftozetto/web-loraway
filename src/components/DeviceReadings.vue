@@ -15,7 +15,7 @@
           dark
           small
           color="secondary"
-          @click="request"
+          @click="request(true)"
           id="btn-update"
         >
           <v-icon dark>
@@ -129,7 +129,7 @@ export default {
     },
     handlePageChange(value) {
       this.page = value;
-      this.request(true);
+      this.request();
     }
   },
 };
