@@ -41,10 +41,13 @@
           <v-row align="center">
             <v-col cols="6">
               <b class="uppercase">Atributos:</b>
-              <div>
+              <div v-if="reading.attributes">
                 <ul v-for="attribute,index in reading.attributes" :key="index">
                   <li class="uppercase">{{index}}: {{attribute}}</li>
                 </ul>
+              </div>
+              <div v-else>
+                Nenhum atributo registrado.
               </div>
             </v-col>
           </v-row>
