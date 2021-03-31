@@ -4,26 +4,16 @@
       <p class="display-1 mt-6" align="center">Carregando...</p>
     </div>
     <div v-else>
-      <v-alert
-        color="primary"
-        dark
-      >
+      <v-alert color="primary" dark>
         Identificador do Dispositivo: {{$route.params.id}}
-        <v-btn
-          v-if="page==1"
-          class="mx-2"
-          fab
-          dark
-          small
-          color="secondary"
-          @click="request(true)"
-          id="btn-update"
-        >
-          <v-icon dark>
-            mdi-update
-          </v-icon>
-        </v-btn>
+        <div class="flex-container">
+          <v-switch v-if="page==1" v-model="switch1" inset color="yellow" @change="changeState"/>
+          <v-btn v-if="!switch1 || page != 1" class="mx-2" fab dark small color="secondary" @click="request(true)">
+            <v-icon dark>mdi-update</v-icon>
+          </v-btn>
+        </div>
       </v-alert>
+      <v-pagination v-model="page" :length="pageCount" class="mb-2" @input="handlePageChange"></v-pagination>
       <v-card v-for="reading in readings" :key="reading._id" class="mx-auto mb-4 ml-4 mr-4">
         <v-list-item two-line>
           <v-list-item-content>
@@ -47,9 +37,7 @@
                   <li class="uppercase">{{index}}: {{attribute}}</li>
                 </ul>
               </div>
-              <div class="wattribute" v-else>
-                Nenhum atributo registrado.
-              </div>
+              <div class="wattribute" v-else>Nenhum atributo registrado.</div>
             </v-col>
           </v-row>
         </v-card-text>
@@ -62,25 +50,10 @@
           >{{new Date(reading.timestamp * 1000).toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"})}}</v-btn>
         </v-card-actions>
       </v-card>
-      <v-pagination
-        v-model="page"
-        :length="pageCount"
-        class="mb-2"
-        @input="handlePageChange"
-      ></v-pagination>
-      <v-snackbar
-        v-model="snackbar"
-      >
+      <v-snackbar v-model="snackbar">
         {{text}}
         <template v-slot:action="{ attrs }">
-          <v-btn
-            color="pink"
-            text
-            v-bind="attrs"
-            @click="snackbar = false"
-          >
-            Fechar
-          </v-btn>
+          <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">Fechar</v-btn>
         </template>
       </v-snackbar>
     </div>
@@ -101,52 +74,83 @@ export default {
   },
 
   data: () => ({
+    interval: undefined,
     readings: undefined,
     snackbar: false,
     text: undefined,
     pageCount: 1,
     page: 1,
+    switch1: false,
   }),
 
   methods: {
     async request(isUpdate) {
+      if (this.$route.params.id === undefined) {
+        clearInterval(this.interval);
+      } else {
+        axios
+          .get(
+            "https://api-loraway.herokuapp.com/readings/" +
+              this.$route.params.id +
+              "?page=" +
+              this.page
+          )
+          .then((response) => {
+            this.readings = response.data.readings;
+            this.pageCount = response.data.paginator.pageCount;
 
-      axios
-        .get("https://api-loraway.herokuapp.com/readings/" + this.$route.params.id + "?page=" + this.page)
-        .then((response) => {
-          this.readings = response.data.readings;
-          this.pageCount = response.data.paginator.pageCount;
-
-          if(isUpdate) {
-            this.text = "Dados atualizados com sucesso! :)"
+            if (isUpdate) {
+              this.text = "Dados atualizados com sucesso! :)";
+              this.snackbar = true;
+            }
+          })
+          .catch(() => {
+            this.text = "Erro ao carregar dados :(";
             this.snackbar = true;
-          }
-        })
-        .catch(() => {
-          this.text = "Erro ao carregar dados :("
-          this.snackbar = true;
-          //console.log(e);
-        });
+            //console.log(e);
+          });
+      }
     },
     handlePageChange(value) {
       this.page = value;
       this.request();
+      if (this.page == 1) this.changeInterval(this.switch1);
+    },
+    changeInterval(flag) {
+      if(!flag) {
+        clearInterval(this.interval);
+      } else {
+        var self = this;
+        this.interval = setInterval(function () {
+          if (self.page != 1) {
+            clearInterval(this.interval);
+          } else {
+            self.request();
+          }
+        }, 3000);
+      }
+    },
+    changeState(value) {
+      this.text = "Atualização automática " + (value ?  "ligada (a cada 3s)." : "desligada.");
+      this.changeInterval(value);
+      this.snackbar = true;
     }
   },
 };
 </script>
 
 <style scoped>
+.flex-container {
+  display: flex;
+  float: right;
+}
+
 .uppercase {
   text-transform: uppercase;
 }
 
 .wattribute {
   white-space: nowrap;
-}
-
-#btn-update {
-  float: right;
 }
 
 .v-alert {
