@@ -46,7 +46,7 @@
                   <li class="uppercase">{{index}}: {{attribute}}</li>
                 </ul>
               </div>
-              <div v-else>
+              <div class="wattribute" v-else>
                 Nenhum atributo registrado.
               </div>
             </v-col>
@@ -138,6 +138,10 @@ export default {
 <style scoped>
 .uppercase {
   text-transform: uppercase;
+}
+
+.wattribute {
+  white-space: nowrap;
 }
 
 #btn-update {
