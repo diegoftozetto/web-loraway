@@ -10,6 +10,7 @@
       >
         Identificador do Dispositivo: {{$route.params.id}}
         <v-btn
+          v-if="page==1"
           class="mx-2"
           fab
           dark
