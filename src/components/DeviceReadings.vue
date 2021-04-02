@@ -7,14 +7,22 @@
       <v-alert color="primary" dark>
         Identificador do Dispositivo: {{$route.params.id}}
         <div class="flex-container">
-          <v-switch v-if="page==1" v-model="switch1" inset color="yellow" @change="changeState"/>
-          <v-btn v-if="!switch1 || page != 1" class="mx-2" fab dark small color="secondary" @click="request(true)">
+          <v-switch v-if="page==1" v-model="switch1" inset color="yellow" @change="changeState" />
+          <v-btn
+            v-if="!switch1 || page != 1"
+            class="mx-2"
+            fab
+            dark
+            small
+            color="secondary"
+            @click="request(true)"
+          >
             <v-icon dark>mdi-update</v-icon>
           </v-btn>
         </div>
       </v-alert>
       <v-pagination v-model="page" :length="pageCount" class="mb-2" @input="handlePageChange"></v-pagination>
-      <v-card v-for="reading in readings" :key="reading._id" class="mx-auto mb-4 ml-4 mr-4">
+      <v-card v-for="reading,index in readings" :key="reading._id" class="mx-auto mb-4 ml-4 mr-4">
         <v-list-item two-line>
           <v-list-item-content>
             <v-list-item-subtitle>
@@ -48,6 +56,9 @@
           <v-btn
             text
           >{{new Date(reading.timestamp * 1000).toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"})}}</v-btn>
+          <v-btn color="secondary" small outlined @click="remove(reading._id, index)">
+            <v-icon dark>mdi-delete</v-icon>
+          </v-btn>
         </v-card-actions>
       </v-card>
       <v-snackbar v-model="snackbar">
@@ -70,8 +81,7 @@ export default {
     this.request();
   },
 
-  mounted() {
-  },
+  mounted() {},
 
   data: () => ({
     interval: undefined,
@@ -117,7 +127,7 @@ export default {
       if (this.page == 1) this.changeInterval(this.switch1);
     },
     changeInterval(flag) {
-      if(!flag) {
+      if (!flag) {
         clearInterval(this.interval);
       } else {
         var self = this;
@@ -131,10 +141,29 @@ export default {
       }
     },
     changeState(value) {
-      this.text = "Atualização automática " + (value ?  "ligada (a cada 3s)." : "desligada.");
+      this.text =
+        "Atualização automática " +
+        (value ? "ligada (a cada 3s)." : "desligada.");
       this.changeInterval(value);
       this.snackbar = true;
-    }
+    },
+    remove(id, index) {
+      axios
+        .delete(
+          "https://api-loraway.herokuapp.com/readings/" + id
+        )
+        .then((response) => {
+          if(response.status === 200) {
+            this.readings.splice(index, 1);
+            this.text = "Leitura removida sucesso! :)";
+            this.snackbar = true;
+          }
+        })
+        .catch(() => {
+          this.text = "Erro ao remover leitura :(";
+          this.snackbar = true;
+        });
+    },
   },
 };
 </script>
