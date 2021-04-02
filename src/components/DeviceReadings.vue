@@ -5,6 +5,19 @@
     </div>
     <div v-else>
       <v-alert color="primary" dark>
+        <v-sheet v-if="chart" color="rgba(0, 0, 0, .12)" class="mb-4">
+          <v-sparkline
+            :labels="labels"
+            :value="value"
+            color="rgba(255, 255, 255, .7)"
+            height="100"
+            padding="24"
+            stroke-linecap="round"
+            smooth
+          >
+            <template v-slot:label="item">{{item.value}}</template>
+          </v-sparkline>
+        </v-sheet>
         Identificador do Dispositivo: {{$route.params.id}}
         <div class="flex-container">
           <v-switch v-if="page==1" v-model="switch1" inset color="yellow" @change="changeState" />
@@ -18,6 +31,17 @@
             @click="request(true)"
           >
             <v-icon dark>mdi-update</v-icon>
+          </v-btn>
+          <v-btn
+            v-if="!switch1 || page != 1"
+            class="mx-2"
+            fab
+            dark
+            small
+            color="success"
+            @click="changeStateChart()"
+          >
+            <v-icon dark>mdi-chart-bar</v-icon>
           </v-btn>
         </div>
       </v-alert>
@@ -53,9 +77,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
-          <v-btn
-            text
-          >{{new Date(reading.timestamp * 1000).toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"})}}</v-btn>
+          <v-btn text>{{convertTimestampToDateAndTime(reading.timestamp)}}</v-btn>
           <v-btn color="secondary" small outlined @click="remove(reading._id, index)">
             <v-icon dark>mdi-delete</v-icon>
           </v-btn>
@@ -91,6 +113,9 @@ export default {
     pageCount: 1,
     page: 1,
     switch1: false,
+    chart: false,
+    value: [],
+    labels: [],
   }),
 
   methods: {
@@ -112,6 +137,24 @@ export default {
             if (isUpdate) {
               this.text = "Dados atualizados com sucesso! :)";
               this.snackbar = true;
+            }
+
+            try {
+              this.value = [];
+              this.labels = [];
+              this.readings.forEach((element, index) => {
+                if(index < 5) {
+                  this.value.push(element.attributes.temperatura);
+                  this.labels.unshift(
+                    element.attributes.temperatura +
+                      " (" +
+                      this.convertTimestampToTime(element.timestamp) +
+                      ")"
+                  );
+                }
+              });
+            } catch (e) {
+              //console.log(e);
             }
           })
           .catch(() => {
@@ -149,11 +192,9 @@ export default {
     },
     remove(id, index) {
       axios
-        .delete(
-          "https://api-loraway.herokuapp.com/readings/" + id
-        )
+        .delete("https://api-loraway.herokuapp.com/readings/" + id)
         .then((response) => {
-          if(response.status === 200) {
+          if (response.status === 200) {
             this.readings.splice(index, 1);
             this.text = "Leitura removida sucesso! :)";
             this.snackbar = true;
@@ -163,6 +204,19 @@ export default {
           this.text = "Erro ao remover leitura :(";
           this.snackbar = true;
         });
+    },
+    convertTimestampToDateAndTime(timestamp) {
+      return new Date(timestamp * 1000).toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      });
+    },
+    convertTimestampToTime(timestamp) {
+      return new Date(timestamp * 1000).toLocaleTimeString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      });
+    },
+    changeStateChart() {
+      this.chart = !this.chart;
     },
   },
 };
