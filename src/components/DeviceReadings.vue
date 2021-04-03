@@ -16,7 +16,7 @@
             smooth
             label-size=5
           >
-            <template v-if="page==1" v-slot:label="item">{{item.value}}</template>
+            <template v-if="page==1 && flag" v-slot:label="item">{{item.value}}</template>
             <template v-else v-slot:label=""></template>
           </v-sparkline>
         </v-sheet>
@@ -114,6 +114,7 @@ export default {
     chart: false,
     value: [],
     labels: [],
+    flag: false
   }),
 
   methods: {
@@ -121,8 +122,7 @@ export default {
       if (this.$route.params.id === undefined) {
         clearInterval(this.interval);
       } else {
-        this.value = [];
-        this.labels = [];
+        this.flag = false;
         axios
           .get(
             "https://api-loraway.herokuapp.com/readings/" +
@@ -131,6 +131,10 @@ export default {
               this.page
           )
           .then((response) => {
+            this.value = [];
+            this.labels = [];
+            this.flag = true;
+
             this.readings = response.data.readings;
             this.pageCount = response.data.paginator.pageCount;
 
