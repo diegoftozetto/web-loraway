@@ -14,12 +14,13 @@
             padding="24"
             stroke-linecap="round"
             smooth
-            label-size=3
+            label-size=5
           >
-            <template v-slot:label="item">{{item.value}}</template>
+            <template v-if="page==1" v-slot:label="item">{{item.value}}</template>
+            <template v-else v-slot:label=""></template>
           </v-sparkline>
         </v-sheet>
-        Identificador do Dispositivo: {{$route.params.id}}
+        ID do Dispositivo: {{$route.params.id}}
         <div class="flex-container">
           <v-switch v-if="page==1" v-model="switch1" inset color="yellow" @change="changeState" />
           <v-btn
@@ -56,23 +57,19 @@
                 outlined
                 type="info"
                 class="mb-1"
-              >Identificador da Mensagem: {{reading.messageId}}</v-alert>
+              >ID da Mensagem: {{reading.messageId}}</v-alert>
             </v-list-item-subtitle>
           </v-list-item-content>
         </v-list-item>
 
-        <v-card-text>
-          <v-row align="center">
-            <v-col cols="6">
-              <b class="uppercase">Atributos:</b>
-              <div v-if="reading.attributes">
-                <ul v-for="attribute,index in reading.attributes" :key="index">
-                  <li class="uppercase">{{index}}: {{attribute}}</li>
-                </ul>
-              </div>
-              <div class="wattribute" v-else>Nenhum atributo registrado.</div>
-            </v-col>
-          </v-row>
+        <v-card-text >
+            <b class="uppercase">Atributos:</b>
+            <div v-if="reading.attributes">
+              <ul v-for="attribute,index in reading.attributes" :key="index">
+                <li class="uppercase">{{index}}: {{attribute}}</li>
+              </ul>
+            </div>
+            <div v-else>Nenhum atributo registrado.</div>
         </v-card-text>
 
         <v-divider></v-divider>
@@ -124,6 +121,8 @@ export default {
       if (this.$route.params.id === undefined) {
         clearInterval(this.interval);
       } else {
+        this.value = [];
+        this.labels = [];
         axios
           .get(
             "https://api-loraway.herokuapp.com/readings/" +
@@ -141,14 +140,12 @@ export default {
             }
 
             try {
-              this.value = [];
-              this.labels = [];
               this.readings.forEach((element, index) => {
-                if(index < 10) {
-                  this.value.push(element.attributes.temperature);
-                  this.labels.unshift(
-                    element.attributes.temperature + " [" + this.convertTimestampToTime(element.timestamp) + "]"
-                  );
+
+                if(this.page === 1 && index <= 5) {
+                  this.addItemGraph(element);
+                } else if (this.page !== 1) {
+                  this.addItemGraph(element);
                 }
               });
             } catch (e) {
@@ -161,6 +158,10 @@ export default {
             //console.log(e);
           });
       }
+    },
+    addItemGraph(element) {
+      this.value.push(element.attributes.temperature);
+      this.labels.unshift(element.attributes.temperature + " [" + this.convertTimestampToTime(element.timestamp) + "]");
     },
     handlePageChange(value) {
       this.page = value;
@@ -228,10 +229,6 @@ export default {
 
 .uppercase {
   text-transform: uppercase;
-}
-
-.wattribute {
-  white-space: nowrap;
 }
 
 .v-alert {
