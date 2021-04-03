@@ -14,6 +14,7 @@
             padding="24"
             stroke-linecap="round"
             smooth
+            label-size=3
           >
             <template v-slot:label="item">{{item.value}}</template>
           </v-sparkline>
@@ -143,13 +144,10 @@ export default {
               this.value = [];
               this.labels = [];
               this.readings.forEach((element, index) => {
-                if(index < 5) {
-                  this.value.push(element.attributes.temperatura);
+                if(index < 10) {
+                  this.value.push(element.attributes.temperature);
                   this.labels.unshift(
-                    element.attributes.temperatura +
-                      " (" +
-                      this.convertTimestampToTime(element.timestamp) +
-                      ")"
+                    element.attributes.temperature + " [" + this.convertTimestampToTime(element.timestamp) + "]"
                   );
                 }
               });
